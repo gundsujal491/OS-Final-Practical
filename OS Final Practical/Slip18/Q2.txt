@@ -1,0 +1,211 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_FRAMES 10
+#define MAX_PAGES 20
+
+// Function to check if a page is in memory
+int isPageInMemory(int page, int frames[], int n) {
+    for (int i = 0; i < n; i++) {
+        if (frames[i] == page) {
+            return 1; // Page is in memory
+        }
+    }
+    return 0; // Page is not in memory
+}
+
+// Function to find the optimal page to replace
+int findOptimalPage(int frames[], int n, int pages[], int pageIndex, int totalPages) {
+    int farthest = -1;
+    int pageToReplace = -1;
+
+    for (int i = 0; i < n; i++) {
+        int j;
+        for (j = pageIndex; j < totalPages; j++) {
+            if (frames[i] == pages[j]) {
+                if (j > farthest) {
+                    farthest = j; // Update farthest index
+                    pageToReplace = i; // Page to replace
+                }
+                break; // Break as we found the page
+            }
+        }
+        if (j == totalPages) {
+            return i; // Page not found in future references
+        }
+    }
+    return pageToReplace; // Return the page to be replaced
+}
+
+// Function to simulate the Optimal Page Replacement Algorithm
+void optimalPageReplacement(int pages[], int totalPages, int n) {
+    int frames[MAX_FRAMES]; // Memory frames
+    int pageFaults = 0;
+
+    // Initialize memory frames
+    for (int i = 0; i < n; i++) {
+        frames[i] = -1; // -1 indicates an empty frame
+    }
+
+    printf("Page Reference String: ");
+    for (int i = 0; i < totalPages; i++) {
+        printf("%d ", pages[i]);
+    }
+    printf("\n");
+
+    // Process each page in the reference string
+    for (int i = 0; i < totalPages; i++) {
+        printf("\nProcessing page: %d\n", pages[i]);
+
+        // Check if the page is already in memory
+        if (!isPageInMemory(pages[i], frames, n)) {
+            // Page fault occurs
+            pageFaults++;
+            printf("Page Fault! Page %d not in memory.\n", pages[i]);
+
+            // If there is an empty frame, use it
+            int emptyFrame = -1;
+            for (int j = 0; j < n; j++) {
+                if (frames[j] == -1) {
+                    emptyFrame = j;
+                    break;
+                }
+            }
+
+            // If no empty frame, find a page to replace
+            if (emptyFrame != -1) {
+                frames[emptyFrame] = pages[i];
+            } else {
+                // Find the optimal page to replace
+                int pageToReplace = findOptimalPage(frames, n, pages, i + 1, totalPages);
+                frames[pageToReplace] = pages[i]; // Replace the page
+                printf("Replacing page %d with page %d.\n", frames[pageToReplace], pages[i]);
+            }
+        } else {
+            printf("Page %d is already in memory.\n", pages[i]);
+        }
+
+        // Display the current state of frames
+        printf("Current frames: ");
+        for (int j = 0; j < n; j++) {
+            if (frames[j] != -1) {
+                printf("%d ", frames[j]);
+            } else {
+                printf("EMPTY ");
+            }
+        }
+    }
+
+    printf("\nTotal Page Faults: %d\n", pageFaults);
+}
+
+int main() {
+    int pages[MAX_PAGES] = {12, 15, 12, 18, 6, 8, 11, 12, 19, 12, 6, 8, 12, 15, 19, 8};
+    int n; // Number of memory frames
+    int totalPages = sizeof(pages) / sizeof(pages[0]);
+
+    // Input for the number of frames
+    printf("Enter the number of memory frames (max %d): ", MAX_FRAMES);
+    scanf("%d", &n);
+    if (n > MAX_FRAMES || n <= 0) {
+        printf("Invalid number of frames. Please enter a value between 1 and %d.\n", MAX_FRAMES);
+        return 1;
+    }
+
+    // Call the function to simulate the optimal page replacement algorithm
+    optimalPageReplacement(pages, totalPages, n);
+
+    return 0;
+}
+
+/*
+Input
+
+Enter the number of memory frames (max 10): 3
+
+Output
+
+Page Reference String: 12 15 12 18 6 8 11 12 19 12 6 8 12 15 19 8
+
+Processing page: 12
+Page Fault! Page 12 not in memory.
+Current frames: 12 EMPTY EMPTY
+
+Processing page: 15
+Page Fault! Page 15 not in memory.
+Replacing page 12 with page 15.
+Current frames: 15 EMPTY EMPTY
+
+Processing page: 12
+Page Fault! Page 12 not in memory.
+Replacing page 15 with page 12.
+Current frames: 12 EMPTY EMPTY
+
+Processing page: 18
+Page Fault! Page 18 not in memory.
+Replacing page 12 with page 18.
+Current frames: 18 EMPTY EMPTY
+
+Processing page: 6
+Page Fault! Page 6 not in memory.
+Replacing page 18 with page 6.
+Current frames: 6 EMPTY EMPTY
+
+Processing page: 8
+Page Fault! Page 8 not in memory.
+Replacing page 6 with page 8.
+Current frames: 8 EMPTY EMPTY
+
+Processing page: 11
+Page Fault! Page 11 not in memory.
+Replacing page 8 with page 11.
+Current frames: 11 EMPTY EMPTY
+
+Processing page: 12
+Page Fault! Page 12 not in memory.
+Replacing page 11 with page 12.
+Current frames: 12 EMPTY EMPTY
+
+Processing page: 19
+Page Fault! Page 19 not in memory.
+Replacing page 12 with page 19.
+Current frames: 19 EMPTY EMPTY
+
+Processing page: 12
+Page Fault! Page 12 not in memory.
+Replacing page 19 with page 12.
+Current frames: 12 EMPTY EMPTY
+
+Processing page: 6
+Page Fault! Page 6 not in memory.
+Replacing page 12 with page 6.
+Current frames: 6 EMPTY EMPTY
+
+Processing page: 8
+Page Fault! Page 8 not in memory.
+Replacing page 6 with page 8.
+Current frames: 8 EMPTY EMPTY
+
+Processing page: 12
+Page Fault! Page 12 not in memory.
+Replacing page 8 with page 12.
+Current frames: 12 EMPTY EMPTY
+
+Processing page: 15
+Page Fault! Page 15 not in memory.
+Replacing page 12 with page 15.
+Current frames: 15 EMPTY EMPTY
+
+Processing page: 19
+Page Fault! Page 19 not in memory.
+Replacing page 15 with page 19.
+Current frames: 19 EMPTY EMPTY
+
+Processing page: 8
+Page Fault! Page 8 not in memory.
+Replacing page 19 with page 8.
+Current frames: 8 EMPTY EMPTY
+
+Total Page Faults: 14
+
+*/

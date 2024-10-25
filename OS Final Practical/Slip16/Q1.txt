@@ -1,0 +1,38 @@
+#include <stdio.h>
+#include <time.h>
+
+void performTask() {
+    // Simulate some work with a simple loop
+    volatile long long sum = 0; // volatile to prevent optimization
+    for (long long i = 0; i < 100000000; i++) {
+        sum += i; // Simple addition operation
+    }
+    printf("Sum: %lld\n", sum); // Display the result
+}
+
+int main() {
+    // Get the starting time
+    clock_t start_time = clock();
+    
+    // Execute the task
+    performTask();
+    
+    // Get the ending time
+    clock_t end_time = clock();
+    
+    // Calculate the elapsed time in seconds
+    double elapsed_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+
+    // Display the elapsed time
+    printf("Execution time: %.6f seconds\n", elapsed_time);
+    
+    return 0;
+}
+
+/*
+Output
+
+Sum: 4999999950000000
+Execution time: 0.276000 seconds
+
+*/

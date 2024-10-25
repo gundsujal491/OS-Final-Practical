@@ -1,0 +1,126 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_FRAMES 10
+#define MAX_PAGES 100
+
+// Function to find the page that will not be used for the longest time in the future
+int findOptimalPage(int pages[], int currentIndex, int frame[], int numFrames, int numPages) {
+    int farthest = currentIndex;
+    int pageIndex = -1;
+
+    for (int i = 0; i < numFrames; i++) {
+        int j;
+        for (j = currentIndex; j < numPages; j++) {
+            if (frame[i] == pages[j]) {
+                // If page is found, break
+                if (j > farthest) {
+                    farthest = j;
+                    pageIndex = i;
+                }
+                break;
+            }
+        }
+        // If the page is never referenced, we can replace it immediately
+        if (j == numPages) {
+            return i;
+        }
+    }
+    // If all pages are referenced in the future, replace the one farthest
+    return pageIndex;
+}
+
+void optimalPageReplacement(int pages[], int numFrames, int numPages) {
+    int frame[MAX_FRAMES];
+    int pageFaults = 0;
+
+    // Initialize frame
+    for (int i = 0; i < numFrames; i++) {
+        frame[i] = -1; // -1 indicates that the frame is empty
+    }
+
+    printf("Page Reference String: ");
+    for (int i = 0; i < numPages; i++) {
+        printf("%d ", pages[i]);
+    }
+    printf("\n");
+
+    // Process each page in the reference string
+    for (int i = 0; i < numPages; i++) {
+        int page = pages[i];
+        int j;
+        int pageFound = 0;
+
+        // Check if the page is already in one of the frames
+        for (j = 0; j < numFrames; j++) {
+            if (frame[j] == page) {
+                pageFound = 1;
+                break;
+            }
+        }
+
+        // Page is not found in frames, we have a page fault
+        if (!pageFound) {
+            pageFaults++;
+            int replaceIndex = findOptimalPage(pages, i + 1, frame, numFrames, numPages);
+
+            // Replace the page
+            frame[replaceIndex] = page;
+            printf("Page fault occurred: Replacing frame %d with page %d\n", replaceIndex, page);
+        }
+
+        // Print current frames
+        printf("Current frames: ");
+        for (j = 0; j < numFrames; j++) {
+            if (frame[j] != -1) {
+                printf("%d ", frame[j]);
+            } else {
+                printf(" - ");
+            }
+        }
+        printf("\n");
+    }
+
+    printf("\nTotal number of page faults: %d\n", pageFaults);
+}
+
+int main() {
+    int numFrames = 3; // Number of memory frames
+    int pages[] = {12, 15, 12, 18, 6, 8, 11, 12, 19, 12, 6, 8, 12, 15, 19, 8};
+    int numPages = sizeof(pages) / sizeof(pages[0]);
+
+    optimalPageReplacement(pages, numFrames, numPages);
+    return 0;
+}
+
+/*
+Output
+
+Page Reference String: 12 15 12 18 6 8 11 12 19 12 6 8 12 15 19 8 
+Page fault occurred: Replacing frame 0 with page 12
+Current frames: 12  -  -
+Page fault occurred: Replacing frame 1 with page 15
+Current frames: 12 15  -
+Current frames: 12 15  -
+Page fault occurred: Replacing frame 2 with page 18
+Current frames: 12 15 18
+Page fault occurred: Replacing frame 0 with page 6
+Current frames: 6 15 18
+Page fault occurred: Replacing frame 1 with page 8
+Current frames: 6 8 18
+Page fault occurred: Replacing frame 2 with page 11
+Current frames: 6 8 11
+Current frames: 6 8 11
+Current frames: 6 8 11
+Page fault occurred: Replacing frame 0 with page 19
+Current frames: 19 8 11
+Current frames: 19 8 11
+Current frames: 19 8 11
+Page fault occurred: Replacing frame 1 with page 15
+Current frames: 19 15 11
+Page fault occurred: Replacing frame 2 with page 8
+Current frames: 19 15 8
+
+Total number of page faults: 10
+
+*/

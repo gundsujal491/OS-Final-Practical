@@ -1,0 +1,109 @@
+#include <stdio.h>
+
+#define MAX_PROCESSES 10
+#define MAX_RESOURCES 10
+
+// Function to calculate the need matrix
+void calculateNeed(int processes[], int max[][MAX_RESOURCES], int allot[][MAX_RESOURCES], int need[][MAX_RESOURCES], int numProcesses, int numResources) {
+    for (int i = 0; i < numProcesses; i++) {
+        for (int j = 0; j < numResources; j++) {
+            need[i][j] = max[i][j] - allot[i][j];
+        }
+    }
+}
+
+// Function to display the need matrix
+void displayNeedMatrix(int need[][MAX_RESOURCES], int numProcesses, int numResources) {
+    printf("\nNeed Matrix:\n");
+    printf("Process\t");
+    for (int j = 0; j < numResources; j++) {
+        printf("R%d\t", j + 1);
+    }
+    printf("\n");
+
+    for (int i = 0; i < numProcesses; i++) {
+        printf("P%d\t", i + 1);
+        for (int j = 0; j < numResources; j++) {
+            printf("%d\t", need[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+int main() {
+    int processes[MAX_PROCESSES];
+    int max[MAX_PROCESSES][MAX_RESOURCES], allot[MAX_PROCESSES][MAX_RESOURCES], need[MAX_PROCESSES][MAX_RESOURCES];
+    int numProcesses, numResources;
+
+    // Input the number of processes and resources
+    printf("Enter the number of processes (max %d): ", MAX_PROCESSES);
+    scanf("%d", &numProcesses);
+    
+    printf("Enter the number of resources (max %d): ", MAX_RESOURCES);
+    scanf("%d", &numResources);
+
+    // Input maximum resources required by each process
+    printf("\nEnter the Maximum Resources Matrix:\n");
+    for (int i = 0; i < numProcesses; i++) {
+        processes[i] = i + 1; // Assign process IDs
+        printf("Enter maximum resources for Process P%d: \n", processes[i]);
+        for (int j = 0; j < numResources; j++) {
+            printf("R%d: ", j + 1);
+            scanf("%d", &max[i][j]);
+        }
+    }
+
+    // Input currently allocated resources to each process
+    printf("\nEnter the Allocated Resources Matrix:\n");
+    for (int i = 0; i < numProcesses; i++) {
+        printf("Enter allocated resources for Process P%d: \n", processes[i]);
+        for (int j = 0; j < numResources; j++) {
+            printf("R%d: ", j + 1);
+            scanf("%d", &allot[i][j]);
+        }
+    }
+
+    // Calculate the need matrix
+    calculateNeed(processes, max, allot, need, numProcesses, numResources);
+
+    // Display the need matrix
+    displayNeedMatrix(need, numProcesses, numResources);
+
+    return 0;
+}
+
+/*
+Output
+
+Enter the number of processes (max 10): 3
+Enter the number of resources (max 10): 2
+
+Enter the Maximum Resources Matrix:
+Enter maximum resources for Process P1:
+R1: 7
+R2: 5
+Enter maximum resources for Process P2:
+R1: 3
+R2: 2
+Enter maximum resources for Process P3:
+R1: 9
+R2: 0
+
+Enter the Allocated Resources Matrix:
+Enter allocated resources for Process P1:
+R1: 0
+R2: 1
+Enter allocated resources for Process P2:
+R1: 2
+R2: 0
+Enter allocated resources for Process P3:
+R1: 3
+R2: 0
+
+Need Matrix:
+Process	R1	R2
+P1	7	4
+P2	1	2
+P3	6	0
+
+*/

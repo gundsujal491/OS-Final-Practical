@@ -1,0 +1,67 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+
+int main() {
+    pid_t pid = fork(); // Create a new child process
+
+    if (pid < 0) {
+        // Fork failed
+        perror("Fork failed");
+        exit(1);
+    } 
+    else if (pid == 0) {
+        // Child process
+        printf("Child Process: PID = %d, Initial Nice Value = %d\n", getpid(), nice(0));
+
+        // Assign higher priority to the child process (lower nice value = higher priority)
+        if (nice(-10) == -1 && errno != 0) { // Increase priority
+            perror("Failed to increase priority using nice()");
+            exit(1);
+        }
+
+        // Display new nice value
+        printf("Child Process: PID = %d, New Nice Value = %d\n", getpid(), nice(0));
+
+        // Simulate some work in the child process
+        for (int i = 0; i < 5; i++) {
+            printf("Child Process: Working... (Iteration %d)\n", i + 1);
+            sleep(1); // Sleep for 1 second
+        }
+    } 
+    else {
+        // Parent process
+        printf("Parent Process: PID = %d, Initial Nice Value = %d\n", getpid(), nice(0));
+        
+        // Simulate some work in the parent process
+        for (int i = 0; i < 5; i++) {
+            printf("Parent Process: Working... (Iteration %d)\n", i + 1);
+            sleep(1); // Sleep for 1 second
+        }
+
+        // Wait for the child process to complete
+        wait(NULL);
+    }
+
+    return 0;
+}
+
+/*
+Output
+
+Parent Process: PID = 12345, Initial Nice Value = 0
+Child Process: PID = 12346, Initial Nice Value = 0
+Child Process: PID = 12346, New Nice Value = -10
+Child Process: Working... (Iteration 1)
+Parent Process: Working... (Iteration 1)
+Child Process: Working... (Iteration 2)
+Parent Process: Working... (Iteration 2)
+Child Process: Working... (Iteration 3)
+Parent Process: Working... (Iteration 3)
+Child Process: Working... (Iteration 4)
+Parent Process: Working... (Iteration 4)
+Child Process: Working... (Iteration 5)
+Parent Process: Working... (Iteration 5)
+ 
+*/

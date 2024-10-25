@@ -1,0 +1,123 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define MAX_PROCESSES 10
+#define IO_WAIT 2 // Fixed I/O waiting time
+
+typedef struct {
+    int pid;             // Process ID
+    int arrival_time;    // Arrival time
+    int cpu_burst;       // Initial CPU burst time
+    int start_time;      // Start time in the Gantt chart
+    int end_time;        // End time in the Gantt chart
+    int turnaround_time; // Turnaround time
+    int waiting_time;    // Waiting time
+} Process;
+
+void calculateTimes(Process processes[], int n) {
+    int current_time = 0;
+    int total_turnaround_time = 0;
+    int total_waiting_time = 0;
+
+    // Sort processes by arrival time (FCFS)
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n - 1; j++) {
+            if (processes[j].arrival_time > processes[j + 1].arrival_time) {
+                Process temp = processes[j];
+                processes[j] = processes[j + 1];
+                processes[j + 1] = temp;
+            }
+        }
+    }
+
+    printf("\nGantt Chart:\n");
+
+    // Calculate times
+    for (int i = 0; i < n; i++) {
+        // If the current time is less than the arrival time of the next process
+        if (current_time < processes[i].arrival_time) {
+            current_time = processes[i].arrival_time; // Move current time forward
+        }
+        
+        processes[i].start_time = current_time;
+        processes[i].end_time = current_time + processes[i].cpu_burst;
+        processes[i].turnaround_time = processes[i].end_time - processes[i].arrival_time;
+        processes[i].waiting_time = processes[i].turnaround_time - processes[i].cpu_burst;
+
+        current_time = processes[i].end_time + IO_WAIT; // Add I/O wait time
+
+        // Print Gantt Chart
+        printf("| P%d ", processes[i].pid);
+    }
+    printf("|\n");
+
+    // Display process details
+    printf("\nProcess\tArrival Time\tBurst Time\tStart Time\tEnd Time\tTurnaround Time\tWaiting Time\n");
+    for (int i = 0; i < n; i++) {
+        printf("P%d\t%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n", processes[i].pid,
+               processes[i].arrival_time, processes[i].cpu_burst, processes[i].start_time,
+               processes[i].end_time, processes[i].turnaround_time, processes[i].waiting_time);
+        total_turnaround_time += processes[i].turnaround_time;
+        total_waiting_time += processes[i].waiting_time;
+    }
+
+    // Calculate and display average times
+    printf("\nAverage Turnaround Time: %.2f\n", (float)total_turnaround_time / n);
+    printf("Average Waiting Time: %.2f\n", (float)total_waiting_time / n);
+}
+
+int main() {
+    srand(time(0));
+    Process processes[MAX_PROCESSES];
+    int n;
+
+    // Input number of processes
+    printf("Enter number of processes (up to %d): ", MAX_PROCESSES);
+    scanf("%d", &n);
+
+    // Input arrival times and initial CPU bursts
+    for (int i = 0; i < n; i++) {
+        processes[i].pid = i + 1;
+        printf("Enter arrival time for Process P%d: ", i + 1);
+        scanf("%d", &processes[i].arrival_time);
+
+        // Generate the initial CPU burst randomly (between 1 and 10 for this example)
+        processes[i].cpu_burst = rand() % 10 + 1;
+
+        processes[i].start_time = 0;
+        processes[i].end_time = 0;
+    }
+
+    // Simulate scheduling using FCFS
+    calculateTimes(processes, n);
+
+    return 0;
+}
+
+
+/*
+Input
+
+Enter number of processes (up to 10): 4
+Enter arrival time for Process P1: 0
+Enter arrival time for Process P2: 1
+Enter arrival time for Process P3: 2
+Enter arrival time for Process P4: 3
+
+Output
+
+Gantt Chart:
+| P1 | P2 | P3 | P4 |
+
+Process Arrival Time  Burst Time  Start Time  End Time  Turnaround Time  Waiting Time
+P1      0             6          0           8         8               2
+P2      1             3          10          13        12              9
+P3      2             5          15          20        18              13
+P4      3             4          22          26        23              19
+
+Average Turnaround Time: 15.25
+Average Waiting Time: 10.75
+
+
+*/

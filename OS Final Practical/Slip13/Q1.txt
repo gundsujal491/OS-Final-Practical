@@ -1,0 +1,64 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <errno.h>
+
+int main() {
+    pid_t pid = fork(); // Create a child process
+
+    if (pid < 0) {
+        // Fork failed
+        perror("Fork failed");
+        exit(EXIT_FAILURE);
+    }
+    else if (pid == 0) {
+        // Child process
+        printf("Child process: PID = %d\n", getpid());
+        
+        // Increase the priority of the child process
+        if (nice(-5) == -1 && errno != 0) { // nice returns -1 on failure
+            perror("Nice failed");
+            exit(EXIT_FAILURE);
+        }
+
+        // Simulate some work in the child process
+        for (int i = 0; i < 5; i++) {
+            printf("Child process working with increased priority... (Iteration %d)\n", i + 1);
+            sleep(1); // Sleep to simulate work
+        }
+    }
+    else {
+        // Parent process
+        printf("Parent process: PID = %d\n", getpid());
+        
+        // Simulate some work in the parent process
+        for (int i = 0; i < 5; i++) {
+            printf("Parent process working... (Iteration %d)\n", i + 1);
+            sleep(1); // Sleep to simulate work
+        }
+
+        // Wait for the child process to complete
+        wait(NULL);
+    }
+    return 0;
+}
+
+/*
+Output
+
+Parent process: PID = 1234
+Child process: PID = 1235
+Parent process working... (Iteration 1)
+Child process working with increased priority... (Iteration 1)
+Parent process working... (Iteration 2)
+Child process working with increased priority... (Iteration 2)
+Parent process working... (Iteration 3)
+Child process working with increased priority... (Iteration 3)
+Parent process working... (Iteration 4)
+Child process working with increased priority... (Iteration 4)
+Parent process working... (Iteration 5)
+Child process working with increased priority... (Iteration 5)
+
+*/

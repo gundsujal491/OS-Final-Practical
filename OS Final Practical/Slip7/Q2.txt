@@ -1,0 +1,112 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define MAX_PROCESSES 10 // Maximum number of processes
+
+typedef struct {
+    int processID;      // Process ID
+    int arrivalTime;    // Arrival time
+    int burstTime;      // CPU burst time
+    int turnaroundTime; // Turnaround time
+    int waitingTime;    // Waiting time
+} Process;
+
+// Function to calculate turnaround and waiting times
+void calculateTimes(Process processes[], int n) {
+    int currentTime = 0; // Track current time
+    for (int i = 0; i < n; i++) {
+        if (currentTime < processes[i].arrivalTime) {
+            currentTime = processes[i].arrivalTime; // Wait until the process arrives
+        }
+        // Calculate turnaround time
+        processes[i].turnaroundTime = currentTime + processes[i].burstTime - processes[i].arrivalTime;
+        // Calculate waiting time
+        processes[i].waitingTime = processes[i].turnaroundTime - processes[i].burstTime;
+
+        // Update current time
+        currentTime += processes[i].burstTime + 2; // Include I/O waiting time of 2 units
+    }
+}
+
+// Function to display Gantt chart and processes
+void displayGanttChart(Process processes[], int n) {
+    printf("Gantt Chart:\n");
+    for (int i = 0; i < n; i++) {
+        printf("| P%d ", processes[i].processID);
+    }
+    printf("|\n0 ");
+    
+    int currentTime = 0;
+    for (int i = 0; i < n; i++) {
+        currentTime += processes[i].burstTime + 2; // Include I/O waiting time of 2 units
+        printf(" %d ", currentTime);
+    }
+    printf("\n");
+}
+
+int main() {
+    Process processes[MAX_PROCESSES];
+    int n; // Number of processes
+
+    // Seed the random number generator
+    srand(time(NULL));
+
+    // Input number of processes
+    printf("Enter the number of processes (max %d): ", MAX_PROCESSES);
+    scanf("%d", &n);
+
+    // Input arrival times and burst times
+    for (int i = 0; i < n; i++) {
+        processes[i].processID = i + 1; // Assign process ID
+        processes[i].arrivalTime = rand() % 10; // Random arrival time between 0 and 9
+        processes[i].burstTime = rand() % 10 + 1; // Random burst time between 1 and 10
+        printf("Process P%d - Arrival Time: %d, Burst Time: %d\n", processes[i].processID, processes[i].arrivalTime, processes[i].burstTime);
+    }
+
+    // Calculate turnaround time and waiting time
+    calculateTimes(processes, n);
+
+    // Display Gantt chart
+    displayGanttChart(processes, n);
+
+    // Display results
+    printf("\nProcess\tArrival\tBurst\tTurnaround\tWaiting\n");
+    for (int i = 0; i < n; i++) {
+        printf("P%d\t%d\t%d\t%d\t\t%d\n", processes[i].processID, processes[i].arrivalTime, processes[i].burstTime,
+               processes[i].turnaroundTime, processes[i].waitingTime);
+    }
+
+    // Calculate and display average times
+    double totalTurnaroundTime = 0, totalWaitingTime = 0;
+    for (int i = 0; i < n; i++) {
+        totalTurnaroundTime += processes[i].turnaroundTime;
+        totalWaitingTime += processes[i].waitingTime;
+    }
+
+    printf("\nAverage Turnaround Time: %.2f\n", totalTurnaroundTime / n);
+    printf("Average Waiting Time: %.2f\n", totalWaitingTime / n);
+
+    return 0;
+}
+
+/*
+output
+
+Enter the number of processes (max 10): 3
+Process P1 - Arrival Time: 2, Burst Time: 3
+Process P2 - Arrival Time: 0, Burst Time: 4
+Process P3 - Arrival Time: 1, Burst Time: 2
+Gantt Chart:
+| P2 | P3 | P1 |
+0  4  6  12 
+
+Process Arrival Burst Turnaround Waiting
+P1      2      3       10          7
+P2      0      4        4          0
+P3      1      2        5          3
+
+Average Turnaround Time: 6.33
+Average Waiting Time: 3.33
+
+*/

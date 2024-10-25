@@ -1,0 +1,93 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_FRAMES 10 // Maximum number of frames
+
+void fifoPageReplacement(int pages[], int numPages, int nFrames) {
+    int frames[MAX_FRAMES]; // Array to store frames
+    int pageFaults = 0; // Number of page faults
+    int pageHit; // Flag to check if a page is already in frames
+    int index = 0; // Index for FIFO
+
+    // Initialize frames
+    for (int i = 0; i < nFrames; i++) {
+        frames[i] = -1; // -1 indicates an empty frame
+    }
+
+    printf("Page Reference String: ");
+    for (int i = 0; i < numPages; i++) {
+        printf("%d ", pages[i]);
+    }
+    printf("\n");
+
+    printf("Frame Status:\n");
+
+    // Process each page in the reference string
+    for (int i = 0; i < numPages; i++) {
+        pageHit = 0; // Reset pageHit for each page
+
+        // Check if page is already in one of the frames
+        for (int j = 0; j < nFrames; j++) {
+            if (frames[j] == pages[i]) {
+                pageHit = 1; // Page hit
+                break;
+            }
+        }
+
+        // If page is not found in frames, a page fault occurs
+        if (!pageHit) {
+            frames[index] = pages[i]; // Replace the oldest page (FIFO)
+            index = (index + 1) % nFrames; // Move to the next frame
+            pageFaults++; // Increment page fault count
+        }
+
+        // Display current frame status
+        for (int j = 0; j < nFrames; j++) {
+            if (frames[j] == -1) {
+                printf("[ ] "); // Empty frame
+            } else {
+                printf("[%d] ", frames[j]); // Page number in frame
+            }
+        }
+        printf("\n");
+    }
+
+    printf("Total Page Faults: %d\n", pageFaults);
+}
+
+int main() {
+    int pages[] = {3, 4, 5, 6, 3, 4, 7, 3, 4, 5, 6, 7, 2, 4, 6}; // Reference string
+    int numPages = sizeof(pages) / sizeof(pages[0]); // Number of pages
+    int nFrames; // Number of frames
+
+    printf("Enter the number of memory frames (n): ");
+    scanf("%d", &nFrames);
+
+    if (nFrames > MAX_FRAMES || nFrames <= 0) {
+        printf("Number of frames must be between 1 and %d.\n", MAX_FRAMES);
+        return 1;
+    }
+
+    fifoPageReplacement(pages, numPages, nFrames);
+
+    return 0;
+}
+
+/*Enter the number of memory frames (n): 3
+Page Reference String: 3 4 5 6 3 4 7 3 4 5 6 7 2 4 6
+Frame Status:
+[3] [ ] [ ]
+[3] [4] [ ]
+[5] [4] [ ]
+[5] [6] [ ]
+[3] [6] [ ]
+[3] [4] [ ]
+[7] [4] [ ]
+[7] [3] [ ]
+[7] [4] [ ]
+[5] [4] [ ]
+[6] [4] [ ]
+[7] [4] [ ]
+[2] [4] [ ]
+Total Page Faults: 10
+*/

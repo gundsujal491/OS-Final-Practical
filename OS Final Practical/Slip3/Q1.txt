@@ -1,0 +1,45 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+int main() {
+    pid_t pid = fork(); // Create a new process
+
+    if (pid < 0) {
+        // Fork failed
+        perror("Fork failed");
+        exit(1);
+    }
+    else if (pid == 0) {
+        // Child process
+        printf("Child Process: PID = %d, Parent PID = %d\n", getpid(), getppid());
+
+        // Replace the child process with a new program (for example, using the 'date' command)
+        execlp("date", "date", NULL);
+        
+        // If exec fails
+        perror("Exec failed");
+        exit(1);
+    }
+    else {
+        // Parent process
+        printf("Parent Process: PID = %d, Child PID = %d\n", getpid(), pid);
+
+        // Wait for the child process to terminate
+        wait(NULL);
+        printf("Control returned to Parent Process after Child Process terminates.\n");
+    }
+
+    return 0;
+}
+
+/*
+
+Parent Process: PID = 1234, Child PID = 1235
+Child Process: PID = 1235, Parent PID = 1234
+Tue Oct 25 12:34:56 UTC 2024
+Control returned to Parent Process after Child Process terminates.
+
+*/

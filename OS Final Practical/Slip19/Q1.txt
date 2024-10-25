@@ -1,0 +1,54 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+int main() {
+    pid_t pid = fork(); // Create a child process
+
+    if (pid < 0) {
+        // Fork failed
+        perror("Fork failed");
+        exit(1);
+    }
+    else if (pid == 0) {
+        // Child process
+        printf("Child Process ID: %d\n", getpid());
+        printf("Executing 'ls' command in child process...\n");
+
+        // Execute 'ls' command
+        execl("/bin/ls", "ls", NULL);
+
+        // If execl returns, it must have failed
+        perror("execl failed");
+        exit(1);
+    }
+    else {
+        // Parent process
+        printf("Parent Process ID: %d\n", getpid());
+        printf("Parent going to sleep...\n");
+
+        // Sleep for 5 seconds
+        sleep(5);
+
+        // Wait for the child process to finish
+        wait(NULL);
+        printf("Child process has completed execution.\n");
+    }
+
+    return 0;
+}
+
+/*
+Output
+
+Parent Process ID: 12345
+Parent going to sleep...
+Child Process ID: 12346
+Executing 'ls' command in child process...
+<output of ls command, e.g.>
+file1.txt  file2.txt  directory1  directory2
+Child process has completed execution.
+
+*/

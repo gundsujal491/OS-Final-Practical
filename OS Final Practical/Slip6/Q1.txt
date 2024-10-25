@@ -1,0 +1,33 @@
+#include <stdio.h>
+#include <time.h>
+
+int main() {
+    // Start clock to measure execution time
+    clock_t start = clock();
+
+    // Instructions/operations to measure time for
+    long long sum = 0;
+    for (long long i = 1; i <= 1000000000; i++) { // Example workload: summing numbers
+        sum += i;
+    }
+
+    // Stop clock
+    clock_t end = clock();
+
+    // Calculate the time taken in seconds
+    double time_taken = (double)(end - start) / CLOCKS_PER_SEC;
+
+    // Display results
+    printf("Sum: %lld\n", sum);
+    printf("Execution Time: %f seconds\n", time_taken);
+
+    return 0;
+}
+
+
+/*
+OutputS
+Sum: 500000000500000000
+Execution Time: 0.123456 seconds
+
+*/

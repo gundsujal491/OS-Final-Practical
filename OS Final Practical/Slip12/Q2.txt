@@ -1,0 +1,150 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_PAGES 20
+
+// Function to find the index of the page to be replaced using OPT algorithm
+int findOptimalPageToReplace(int pages[], int currentIndex, int frame[], int numFrames, int numPages) {
+    int farthest = -1; // To track the farthest page
+    int pageToReplace = -1; // Page to be replaced
+
+    for (int i = 0; i < numFrames; i++) {
+        // Check if the page in frame is in the reference string after the current index
+        int j;
+        for (j = currentIndex + 1; j < numPages; j++) {
+            if (frame[i] == pages[j]) {
+                break; // Page is found in the future reference
+            }
+        }
+        // If the page is not found, replace it
+        if (j == numPages) {
+            return i; // This page is not going to be used again
+        }
+        
+        // Track the farthest usage
+        if (j > farthest) {
+            farthest = j; // Update farthest index
+            pageToReplace = i; // Update the page to replace
+        }
+    }
+
+    return pageToReplace; // Return the index of the page to replace
+}
+
+// Function to implement OPT page replacement
+void optimalPageReplacement(int pages[], int numFrames, int numPages) {
+    int frame[MAX_PAGES];
+    int pageFaults = 0;
+    int frameIndex = 0; // Track the index of the frame
+
+    // Initialize frames to -1 (indicating empty frames)
+    for (int i = 0; i < numFrames; i++) {
+        frame[i] = -1;
+    }
+
+    printf("Page Reference: ");
+    for (int i = 0; i < numPages; i++) {
+        printf("%d ", pages[i]);
+    }
+    printf("\n");
+
+    // Simulate page replacement
+    for (int i = 0; i < numPages; i++) {
+        int currentPage = pages[i];
+        int found = 0;
+
+        // Check if the page is already in one of the frames
+        for (int j = 0; j < numFrames; j++) {
+            if (frame[j] == currentPage) {
+                found = 1; // Page hit
+                break;
+            }
+        }
+
+        if (!found) { // Page fault occurs
+            pageFaults++;
+            // If there is an empty frame, use it
+            if (frameIndex < numFrames) {
+                frame[frameIndex] = currentPage; // Load the new page into the frame
+                frameIndex++;
+            } else {
+                // Replace a page using the OPT algorithm
+                int pageToReplaceIndex = findOptimalPageToReplace(pages, i, frame, numFrames, numPages);
+                frame[pageToReplaceIndex] = currentPage; // Replace the page
+            }
+
+            printf("Page Fault! Loaded page: %d\n", currentPage);
+        } else {
+            printf("Page %d is already in the frame.\n", currentPage);
+        }
+
+        // Display current frame state
+        printf("Current Frames: ");
+        for (int j = 0; j < numFrames; j++) {
+            if (frame[j] != -1) {
+                printf("%d ", frame[j]);
+            } else {
+                printf("- "); // Empty frame
+            }
+        }
+        printf("\n");
+    }
+
+    // Display total number of page faults
+    printf("\nTotal Page Faults: %d\n", pageFaults);
+}
+
+int main() {
+    int pages[] = {12, 15, 12, 18, 6, 8, 11, 12, 19, 12, 6, 8, 12, 15, 19, 8}; // Page reference string
+    int numPages = sizeof(pages) / sizeof(pages[0]); // Total number of pages
+    int numFrames;
+
+    printf("Enter the number of memory frames: ");
+    scanf("%d", &numFrames);
+
+    // Validate the number of frames
+    if (numFrames <= 0) {
+        printf("Number of frames must be greater than 0.\n");
+        return 1;
+    }
+
+    optimalPageReplacement(pages, numFrames, numPages); // Call the OPT page replacement function
+    return 0;
+}
+
+/*
+Output
+
+Enter the number of memory frames: 3
+Page Reference: 12 15 12 18 6 8 11 12 19 12 6 8 12 15 19 8
+Page Fault! Loaded page: 12
+Current Frames: 12 - -
+Page Fault! Loaded page: 15
+Current Frames: 12 15 -
+Page 12 is already in the frame.
+Page Fault! Loaded page: 18
+Current Frames: 18 15 12
+Page Fault! Loaded page: 6
+Current Frames: 6 15 12
+Page Fault! Loaded page: 8
+Current Frames: 6 8 12
+Page Fault! Loaded page: 11
+Current Frames: 11 8 12
+Page 12 is already in the frame.
+Page Fault! Loaded page: 19
+Current Frames: 19 8 12
+Page 6 is already in the frame.
+Page Fault! Loaded page: 8
+Current Frames: 19 8 12
+Page Fault! Loaded page: 12
+Current Frames: 19 8 12
+Page Fault! Loaded page: 15
+Current Frames: 19 15 12
+Page Fault! Loaded page: 19
+Current Frames: 19 15 12
+Page Fault! Loaded page: 8
+Current Frames: 19 15 8
+
+Total Page Faults: 10
+
+*/

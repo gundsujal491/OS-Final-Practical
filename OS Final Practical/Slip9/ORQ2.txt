@@ -1,0 +1,124 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <time.h>
+
+#define MAX_PROCESSES 10
+
+typedef struct {
+    int pid;                // Process ID
+    int arrival_time;       // Arrival time
+    int burst_time;         // Initial burst time
+    int remaining_time;     // Remaining burst time
+    int waiting_time;       // Waiting time
+    int turnaround_time;    // Turnaround time
+} Process;
+
+// Function to calculate turnaround and waiting times
+void calculateTimes(Process processes[], int n, int time_quantum) {
+    int total_waiting_time = 0;
+    int total_turnaround_time = 0;
+    int time = 0; // Current time
+    int remaining_processes = n;
+    bool done[MAX_PROCESSES] = {false}; // Track completed processes
+
+    printf("Gantt Chart:\n");
+
+    while (remaining_processes > 0) {
+        bool has_process = false; // To check if there is any process left
+        for (int i = 0; i < n; i++) {
+            // Check if the process has arrived and is not done
+            if (processes[i].arrival_time <= time && !done[i]) {
+                has_process = true;
+
+                if (processes[i].remaining_time > 0) {
+                    printf("P%d ", processes[i].pid);
+
+                    if (processes[i].remaining_time > time_quantum) {
+                        // Process will run for the time quantum
+                        time += time_quantum;
+                        processes[i].remaining_time -= time_quantum;
+                    } else {
+                        // Process will finish
+                        time += processes[i].remaining_time;
+                        processes[i].waiting_time = time - processes[i].arrival_time - processes[i].burst_time;
+                        processes[i].turnaround_time = time - processes[i].arrival_time;
+                        processes[i].remaining_time = 0; // Process is finished
+                        done[i] = true; // Mark process as done
+                        remaining_processes--;
+                    }
+                }
+            }
+        }
+        // If no process was found, just increment time
+        if (!has_process) {
+            time++;
+        }
+    }
+
+    // Calculate total waiting time and turnaround time
+    for (int i = 0; i < n; i++) {
+        total_waiting_time += processes[i].waiting_time;
+        total_turnaround_time += processes[i].turnaround_time;
+    }
+
+    // Display results
+    printf("\n\nProcess ID | Waiting Time | Turnaround Time\n");
+    for (int i = 0; i < n; i++) {
+        printf("P%d         | %d            | %d\n", processes[i].pid, processes[i].waiting_time, processes[i].turnaround_time);
+    }
+
+    printf("\nAverage Waiting Time: %.2f\n", (float)total_waiting_time / n);
+    printf("Average Turnaround Time: %.2f\n", (float)total_turnaround_time / n);
+}
+
+int main() {
+    int n, time_quantum;
+    Process processes[MAX_PROCESSES];
+
+    // Seed for random number generation
+    srand(time(NULL));
+
+    printf("Enter the number of processes (max %d): ", MAX_PROCESSES);
+    scanf("%d", &n);
+    
+    for (int i = 0; i < n; i++) {
+        printf("Enter arrival time for Process %d: ", i + 1);
+        scanf("%d", &processes[i].arrival_time);
+        
+        // Generate random initial burst time between 1 and 10
+        processes[i].burst_time = (rand() % 10) + 1;
+        processes[i].remaining_time = processes[i].burst_time; // Initialize remaining time
+        processes[i].pid = i + 1; // Assign process ID
+    }
+
+    printf("Enter the time quantum: ");
+    scanf("%d", &time_quantum);
+
+    // Calculate turnaround and waiting times
+    calculateTimes(processes, n, time_quantum);
+
+    return 0;
+}
+
+/*
+Output
+
+Enter the number of processes (max 10): 3
+Enter arrival time for Process 1: 0
+Enter arrival time for Process 2: 1
+Enter arrival time for Process 3: 2
+Enter the time quantum: 2
+
+Gantt Chart:
+P1 P2 P1 P3 P1 P2 P3 P3
+
+Process ID | Waiting Time | Turnaround Time
+P1         |  4            |  9
+P2         |  2            |  5
+P3         |  10           |  18
+
+Average Waiting Time: 5.33
+Average Turnaround Time: 10.67
+
+*/

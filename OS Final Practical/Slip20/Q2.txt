@@ -1,0 +1,120 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_FRAMES 3
+#define MAX_PAGES 12
+
+// Function to find the index of the least recently used page
+int findLRU(int pages[], int frame[], int n, int m) {
+    int i, j, index, minimum, minimumIndex;
+
+    for (i = 0; i < m; i++) {
+        int found = 0;
+        for (j = 0; j < n; j++) {
+            if (frame[i] == pages[j]) {
+                found = 1;
+                if (j < minimum || minimum == -1) {
+                    minimum = j;
+                    minimumIndex = i;
+                }
+                break;
+            }
+        }
+        if (!found) {
+            return i; // Page not found in the frame
+        }
+    }
+    return minimumIndex; // Return the index of the LRU page
+}
+
+// Function to simulate the LRU page replacement algorithm
+void simulateLRU(int pages[], int n, int m) {
+    int frame[MAX_FRAMES], pageFaults = 0;
+
+    // Initialize frames
+    for (int i = 0; i < m; i++) {
+        frame[i] = -1; // -1 indicates an empty frame
+    }
+
+    // Iterate through each page in the reference string
+    for (int i = 0; i < n; i++) {
+        int j, pageFound = 0;
+
+        // Check if page is already in frame
+        for (j = 0; j < m; j++) {
+            if (frame[j] == pages[i]) {
+                pageFound = 1; // Page is already in frame
+                break;
+            }
+        }
+
+        // If page not found in frame, page fault occurs
+        if (!pageFound) {
+            // Find the index of the LRU page
+            int lruIndex = findLRU(pages, frame, i, m);
+
+            // Replace the LRU page with the new page
+            frame[lruIndex] = pages[i];
+            pageFaults++;
+
+            // Print the current frame status
+            printf("Page Fault! Page %d loaded into frame %d.\n", pages[i], lruIndex);
+        } else {
+            printf("Page %d is already in frame %d.\n", pages[i], j);
+        }
+
+        // Print current frame state
+        printf("Current frame state: ");
+        for (int k = 0; k < m; k++) {
+            printf("%d ", frame[k]);
+        }
+        printf("\n");
+    }
+
+    printf("Total number of page faults: %d\n", pageFaults);
+}
+
+int main() {
+    // Given page reference string
+    int pages[MAX_PAGES] = {7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2};
+    int n = sizeof(pages) / sizeof(pages[0]); // Total number of pages
+    int m = MAX_FRAMES; // Number of frames
+
+    // Simulate LRU page replacement
+    simulateLRU(pages, n, m);
+
+    return 0;
+}
+
+/*
+Output
+
+Page Fault! Page 7 loaded into frame 0.
+Current frame state: 7 -1 -1
+Page Fault! Page 0 loaded into frame 1.
+Current frame state: 7 0 -1
+Page Fault! Page 1 loaded into frame 2.
+Current frame state: 7 0 1
+Page Fault! Page 2 loaded into frame 0.
+Current frame state: 2 0 1
+Page 0 is already in frame 1.
+Current frame state: 2 0 1
+Page Fault! Page 3 loaded into frame 1.
+Current frame state: 2 3 1
+Page 0 is already in frame 1.
+Current frame state: 2 3 1
+Page Fault! Page 4 loaded into frame 2.
+Current frame state: 4 3 1
+Page Fault! Page 2 loaded into frame 0.
+Current frame state: 4 3 2
+Page 3 is already in frame 1.
+Current frame state: 4 3 2
+Page 0 is already in frame 0.
+Current frame state: 4 3 2
+Page 3 is already in frame 1.
+Current frame state: 4 3 2
+Page Fault! Page 2 loaded into frame 2.
+Current frame state: 4 3 2
+Total number of page faults: 8
+
+*/

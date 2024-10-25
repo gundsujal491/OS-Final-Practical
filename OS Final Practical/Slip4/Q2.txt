@@ -1,0 +1,142 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define MAX_PROCESSES 10
+#define IO_WAIT 2 // Fixed I/O waiting time
+
+typedef struct {
+    int pid;             // Process ID
+    int arrival_time;    // Arrival time
+    int cpu_burst;       // CPU burst time
+    int priority;        // Priority (lower number indicates higher priority)
+    int start_time;      // Start time in the Gantt chart
+    int end_time;        // End time in the Gantt chart
+    int turnaround_time; // Turnaround time
+    int waiting_time;    // Waiting time
+} Process;
+
+void calculateTimes(Process processes[], int n) {
+    int current_time = 0;
+    int total_turnaround_time = 0;
+    int total_waiting_time = 0;
+
+    // Sort processes by arrival time (FCFS) then by priority
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n - 1; j++) {
+            if (processes[j].arrival_time > processes[j + 1].arrival_time ||
+                (processes[j].arrival_time == processes[j + 1].arrival_time &&
+                 processes[j].priority > processes[j + 1].priority)) {
+                Process temp = processes[j];
+                processes[j] = processes[j + 1];
+                processes[j + 1] = temp;
+            }
+        }
+    }
+
+    printf("\nGantt Chart:\n");
+
+    // Calculate times
+    while (1) {
+        int idx = -1;
+        int highest_priority = 9999;
+
+        // Find the process with the highest priority that is ready to run
+        for (int i = 0; i < n; i++) {
+            if (processes[i].arrival_time <= current_time && processes[i].cpu_burst > 0 && processes[i].priority < highest_priority) {
+                highest_priority = processes[i].priority;
+                idx = i;
+            }
+        }
+
+        // If no process is ready to run, break the loop
+        if (idx == -1) {
+            break;
+        }
+
+        // Process execution
+        processes[idx].start_time = current_time;
+        processes[idx].end_time = current_time + processes[idx].cpu_burst;
+        processes[idx].turnaround_time = processes[idx].end_time - processes[idx].arrival_time;
+        processes[idx].waiting_time = processes[idx].turnaround_time - processes[idx].cpu_burst;
+
+        // Update the current time and mark the process as completed
+        current_time = processes[idx].end_time + IO_WAIT; // Add I/O wait time
+        processes[idx].cpu_burst = 0; // Mark process as finished
+
+        // Print Gantt Chart
+        printf("| P%d ", processes[idx].pid);
+    }
+    printf("|\n");
+
+    // Display process details
+    printf("\nProcess\tArrival Time\tBurst Time\tPriority\tStart Time\tEnd Time\tTurnaround Time\tWaiting Time\n");
+    for (int i = 0; i < n; i++) {
+        printf("P%d\t%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n", processes[i].pid,
+               processes[i].arrival_time, processes[i].cpu_burst == 0 ? processes[i].end_time - processes[i].start_time : 0,
+               processes[i].priority, processes[i].start_time, processes[i].end_time,
+               processes[i].turnaround_time, processes[i].waiting_time);
+        total_turnaround_time += processes[i].turnaround_time;
+        total_waiting_time += processes[i].waiting_time;
+    }
+
+    // Calculate and display average times
+    printf("\nAverage Turnaround Time: %.2f\n", (float)total_turnaround_time / n);
+    printf("Average Waiting Time: %.2f\n", (float)total_waiting_time / n);
+}
+
+int main() {
+    srand(time(0));
+    Process processes[MAX_PROCESSES];
+    int n;
+
+    // Input number of processes
+    printf("Enter number of processes (up to %d): ", MAX_PROCESSES);
+    scanf("%d", &n);
+
+    // Input arrival times, initial CPU bursts, and priorities
+    for (int i = 0; i < n; i++) {
+        processes[i].pid = i + 1;
+        printf("Enter arrival time for Process P%d: ", i + 1);
+        scanf("%d", &processes[i].arrival_time);
+
+        // Generate the initial CPU burst randomly (between 1 and 10 for this example)
+        processes[i].cpu_burst = rand() % 10 + 1;
+
+        // Get priority (lower number means higher priority)
+        printf("Enter priority for Process P%d (lower number indicates higher priority): ", i + 1);
+        scanf("%d", &processes[i].priority);
+    }
+
+    // Simulate scheduling using Non-preemptive Priority Scheduling
+    calculateTimes(processes, n);
+
+    return 0;
+}
+
+
+/*
+Input
+
+Enter number of processes (up to 10): 3
+Enter arrival time for Process P1: 0
+Enter priority for Process P1 (lower number indicates higher priority): 2
+Enter arrival time for Process P2: 1
+Enter priority for Process P2 (lower number indicates higher priority): 1
+Enter arrival time for Process P3: 2
+Enter priority for Process P3 (lower number indicates higher priority): 3
+
+Output
+
+Gantt Chart:
+| P2 | P1 | P3 |
+
+Process Arrival Time  Burst Time  Priority  Start Time  End Time  Turnaround Time  Waiting Time
+P2      1             4          1         2           6         5               1
+P1      0             3          2         6           9         9               6
+P3      2             5          3         11          16        14              9
+
+Average Turnaround Time: 9.33
+Average Waiting Time: 5.33
+
+*/

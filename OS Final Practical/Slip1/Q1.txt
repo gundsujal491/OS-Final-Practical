@@ -1,0 +1,77 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <errno.h>
+
+int main() {
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        // Fork failed
+        perror("Fork failed");
+        exit(1);
+    }
+    else if (pid == 0) {
+        // Child process
+        printf("Child process before nice adjustment: PID = %d\n", getpid());
+        
+        // Increase the priority of the child process
+        if (nice(-10) == -1 && errno != 0) { // nice returns -1 on failure and also sets errno
+            perror("Nice failed");
+        }
+        
+        printf("Child process after nice adjustment: PID = %d\n", getpid());
+        
+        // Child process doing some work
+        for (int i = 0; i < 5; i++) {
+            printf("Child process working with high priority... (Iteration %d)\n", i+1);
+            sleep(1);
+        }
+    }
+    else {
+        // Parent process
+        printf("Parent process: PID = %d\n", getpid());
+        
+        // Parent process doing some work
+        for (int i = 0; i < 5; i++) {
+            printf("Parent process working... (Iteration %d)\n", i+1);
+            sleep(1);
+        }
+
+        // Wait for the child process to complete
+        wait(NULL);
+    }
+    return 0;
+}
+
+
+/*
+# Save the code in a file, e.g., nice_example.c
+# Compile the code
+gcc nice_example.c -o nice_example
+
+# Run the compiled program
+./nice_example
+
+*/
+
+/*
+Output:
+
+Parent process: PID = 1234
+Child process before nice adjustment: PID = 1235
+Child process after nice adjustment: PID = 1235
+Parent process working... (Iteration 1)
+Child process working with high priority... (Iteration 1)
+Parent process working... (Iteration 2)
+Child process working with high priority... (Iteration 2)
+Parent process working... (Iteration 3)
+Child process working with high priority... (Iteration 3)
+Parent process working... (Iteration 4)
+Child process working with high priority... (Iteration 4)
+Parent process working... (Iteration 5)
+Child process working with high priority... (Iteration 5)
+
+*/
